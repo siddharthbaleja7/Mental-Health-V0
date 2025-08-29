@@ -1,0 +1,25 @@
+# Node.js / React Native
+node_modules/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# React Native build
+ios/Pods/
+ios/build/
+android/.gradle/
+android/app/build/
+
+# VSCode
+.vscode/
+
+# Env files
+.env
