@@ -1,0 +1,8 @@
+transformers==4.38.2
+datasets==2.15.0
+scikit-learn==1.4.2
+torch>=2.0       # Recommended for GPU (leave out if using only CPU)
+pandas==2.2.2
+numpy==1.26.4
+nltk==3.8.1
+tqdm==4.66.2
