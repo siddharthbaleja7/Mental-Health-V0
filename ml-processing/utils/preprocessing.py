@@ -14,3 +14,4 @@ def read_and_preprocess(filepath):
     # Optionally map labels (0/1)
     df['label'] = df['is_depression'].astype(int)
     return df[['clean_text', 'label']]
+ 
