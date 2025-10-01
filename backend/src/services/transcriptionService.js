@@ -28,5 +28,4 @@ async function transcribe(filePath) {
 
   return transcription;
 }
-
 module.exports = { transcribe };
