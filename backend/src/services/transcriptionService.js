@@ -1,110 +1,142 @@
 const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
-let googleClient;
 
-// Lazy-require Google Speech client only when needed (avoids forcing credentials for other providers)
-function getGoogleClient() {
-  if (!googleClient) {
-    try {
-      const speech = require('@google-cloud/speech');
-      googleClient = new speech.SpeechClient();
-    } catch (err) {
-      // If the package isn't installed or cannot be initialized, surface a clear error later
-      googleClient = null;
-    }
+/**
+ * Transcribe audio using Google Gemini 2.5 Flash
+ */
+async function transcribeWithGemini(filePath) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not set');
   }
-  return googleClient;
+
+  const file = fs.readFileSync(filePath);
+  const audioBase64 = file.toString('base64');
+
+  // Use Gemini 2.5 Flash (best for audio transcription)
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const response = await axios.post(url, {
+    contents: [{
+      parts: [{
+        text: "Transcribe this audio file accurately. Return only the transcription text without any additional commentary."
+      }, {
+        inlineData: {
+          mimeType: "audio/wav",
+          data: audioBase64
+        }
+      }]
+    }]
+  }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+    console.error('Unexpected API response:', JSON.stringify(response.data));
+    throw new Error('Invalid response format from Gemini API');
+  }
+
+  return response.data.candidates[0].content.parts[0].text.trim();
 }
 
 /**
- * Contract:
- * - Input: filePath (string) - absolute/relative path to audio file
- * - Output: transcription (string) on success
- * - Errors: throws on missing file, provider misconfiguration, or upstream failures
- *
- * Providers supported:
- * - gemini: sends base64 audio to GEMINI_API_URL with Bearer GEMINI_API_KEY and expects { text | transcript }
- * - google (default): uses @google-cloud/speech.SpeechClient
+ * Main transcription function with fallback options
  */
 async function transcribe(filePath) {
-  if (!filePath) throw new Error('filePath is required');
+  if (!filePath) {
+    throw new Error('filePath is required');
+  }
 
   if (!fs.existsSync(filePath)) {
-    throw new Error(`audio file not found: ${filePath}`);
+    throw new Error(`Audio file not found: ${filePath}`);
   }
 
-  const provider = (process.env.TRANSCRIPTION_PROVIDER || 'google').toLowerCase();
+  // Try Gemini 2.5 models in order of preference
+  const models = [
+    'gemini-2.5-flash',           // Best balance of speed and quality
+    'gemini-2.5-pro',             // Highest quality
+    'gemini-2.0-flash',           // Fallback
+    'gemini-flash-latest'         // Generic latest
+  ];
 
-  if (provider === 'gemini') {
-    // Gemini provider: send base64 audio in JSON payload to configurable endpoint
-    const url = process.env.GEMINI_API_URL;
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_TOKEN;
+  let lastError;
 
-    if (!url) throw new Error('GEMINI_API_URL is not set for gemini provider');
-    if (!apiKey) {
-      // allow calling without a key for local dev/test endpoints
-      console.warn('GEMINI_API_KEY not set; attempting unauthenticated request to GEMINI_API_URL');
-    }
-
-    const file = fs.readFileSync(filePath);
-    const audioBase64 = file.toString('base64');
-
-    const filename = path.basename(filePath);
-
-    // Build request body - keep it generic so it can be adapted to different Gemini endpoints
-    const body = {
-      filename,
-      audio: audioBase64,
-      // hint for provider about the content type if available
-      content_type: 'audio/wav',
-    };
-
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
+  for (const model of models) {
     try {
-      const resp = await axios.post(url, body, { headers, timeout: 120000 });
+      console.log(`Attempting transcription with ${model}...`);
+      
+      const apiKey = process.env.GEMINI_API_KEY;
+      const file = fs.readFileSync(filePath);
+      const audioBase64 = file.toString('base64');
 
-      // Try several likely response shapes. Keep robust for integrations that return { text } or { transcript }
-      const data = resp.data || {};
-      const transcript = data.text || data.transcript || data.result || data.output;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-      if (typeof transcript === 'string' && transcript.trim().length > 0) return transcript.trim();
+      const response = await axios.post(url, {
+        contents: [{
+          parts: [{
+            text: "Transcribe this audio file accurately. Return only the transcription text without any additional commentary."
+          }, {
+            inlineData: {
+              mimeType: "audio/wav",
+              data: audioBase64
+            }
+          }]
+        }]
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 60000 // 60 second timeout
+      });
 
-      // If the response contains nested structures, attempt to extract plausible transcript strings
-      if (Array.isArray(data.results)) {
-        return data.results.map(r => r.text || r.transcript).filter(Boolean).join('\n');
+      if (response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        const transcription = response.data.candidates[0].content.parts[0].text.trim();
+        console.log(`✓ Transcription successful with ${model}`);
+        return transcription;
       }
-
-      throw new Error('Gemini provider returned an unexpected response shape: ' + JSON.stringify(data).slice(0, 500));
-    } catch (err) {
-      // Normalize error message
-      const msg = err && err.response && err.response.data ? JSON.stringify(err.response.data) : err.message;
-      throw new Error(`Gemini transcription failed: ${msg}`);
+    } catch (error) {
+      lastError = error;
+      console.log(`✗ ${model} failed: ${error.response?.data?.error?.message || error.message}`);
+      continue;
     }
   }
 
-  // Default: use Google Cloud Speech
-  const client = getGoogleClient();
-  if (!client) throw new Error('Google Speech client not available - install @google-cloud/speech or set TRANSCRIPTION_PROVIDER=gemini');
-
-  const file = fs.readFileSync(filePath);
-  const audioBytes = file.toString('base64');
-
-  const audio = { content: audioBytes };
-  const config = { encoding: 'LINEAR16', languageCode: 'en-US' };
-  const request = { audio, config };
-
-  const [response] = await client.recognize(request);
-  const transcription = (response.results || [])
-    .map(result => (result.alternatives && result.alternatives[0] && result.alternatives[0].transcript) || '')
-    .filter(Boolean)
-    .join('\n');
-
-  return transcription;
+  // If all models fail, throw the last error
+  const errorMessage = lastError?.response?.data?.error?.message || lastError?.message || 'Unknown error';
+  throw new Error(`Transcription failed with all models: ${errorMessage}`);
 }
 
-module.exports = { transcribe };
+/**
+ * List available Gemini models (for debugging)
+ */
+async function listGeminiModels() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.log('GEMINI_API_KEY not set');
+    return;
+  }
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+    const response = await axios.get(url);
+    
+    console.log('\n=== Available Gemini Models ===');
+    response.data.models
+      .filter(m => m.supportedGenerationMethods.includes('generateContent'))
+      .forEach(model => {
+        console.log(`\nModel: ${model.name}`);
+        console.log(`  Display Name: ${model.displayName}`);
+      });
+    console.log('\n================================\n');
+  } catch (error) {
+    console.error('Error listing models:', error.response?.data || error.message);
+  }
+}
+
+module.exports = { 
+  transcribe, 
+  transcribeWithGemini,
+  listGeminiModels 
+};
