@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 
 const speechRoutes = require('./src/routes/speechRoutes');
 const authRoutes = require('./src/routes/authRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 const logger = require('./src/utils/logger');
 const crisisHandler = require('./src/middleware/crisis');
 const db = require('./src/config/database');
@@ -22,6 +23,7 @@ app.use(logger);
 
 app.use('/api/speech', speechRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(crisisHandler);
 
