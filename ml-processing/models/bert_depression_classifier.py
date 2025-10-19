@@ -10,11 +10,16 @@ class BertDepressionClassifier:
         inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
         with torch.no_grad():
             outputs = self.model(**inputs)
+            # probs will be an array like [prob_not_depression, prob_depression]
             probs = torch.nn.functional.softmax(outputs.logits, dim=1).cpu().numpy()[0]
-        pred_class = int(probs.argmax())
-        confidence = float(probs[pred_class])
-        return {"prediction": "Depression" if pred_class == 1 else "Not Depression", "confidence": confidence}
-
+        
+        # Get the probability of "Depression" (assuming it's class 1)
+        depression_score = float(probs[1]) 
+        
+        return {
+            "prediction": "Depression" if depression_score > 0.5 else "Not Depression", 
+            "score": depression_score  # <-- We now return the raw score
+        }
 # Usage:
 # classifier = BertDepressionClassifier("depression_distilbert_model")
 # result = classifier.predict("I feel so empty and worthless all the time, nothing brings me joy anymore.")
