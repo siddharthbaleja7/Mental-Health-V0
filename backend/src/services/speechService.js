@@ -2,21 +2,39 @@ const transcriptionService = require('./transcriptionService');
 const riskAnalyzer = require('../ml/riskAnalyzer');
 const User = require('../models/User');
 const fs = require('fs').promises;
+const path = require('path');
+const audioConverter = require('../utils/audioConverter');
+const { ensureDir } = require('../utils/ensureDir');
 
 async function processSpeech(filePath, userId) {
+  // Ensure the uploads directory exists
+  const uploadsDir = path.join(__dirname, '../../uploads');
+  await ensureDir(uploadsDir);
+
   try {
+    // Convert audio to WAV format if needed
+    const wavFilePath = await audioConverter.convertToWav(filePath);
+    
     // Step 1: Transcribe audio to text using Gemini
-    const transcript = await transcriptionService.transcribe(filePath);
+    const transcript = await transcriptionService.transcribe(wavFilePath);
     console.log('Transcription completed:', transcript);
 
     // Step 2: Analyze depression risk using Gemini
-    const riskScore = await riskAnalyzer.analyze(transcript);
-    console.log('Risk analysis completed. Score:', riskScore);
+    let riskScore;
+    let riskError = null;
+    try {
+      riskScore = await riskAnalyzer.analyze(transcript);
+      console.log('Risk analysis completed. Score:', riskScore);
+    } catch (error) {
+      console.error('Risk analysis failed:', error.message);
+      riskError = error.message;
+    }
 
     // Step 3: Save results to user profile
     const assessment = {
       transcript,
-      riskScore,
+      riskScore: riskError ? null : riskScore,
+      riskError,
       date: new Date(),
     };
 
@@ -24,17 +42,24 @@ async function processSpeech(filePath, userId) {
       $push: { assessments: assessment }
     });
 
-    // Step 4: Clean up the uploaded file
+    // Step 4: Clean up the uploaded files
     try {
-      await fs.unlink(filePath);
+      // Delete both original and converted files if they exist
+      if (filePath !== wavFilePath) {
+        await fs.unlink(path.resolve(filePath));
+        await fs.unlink(path.resolve(wavFilePath));
+      } else {
+        await fs.unlink(path.resolve(filePath));
+      }
     } catch (err) {
       console.warn('Failed to delete uploaded file:', err);
     }
 
     return {
       transcript,
-      riskScore,
-      message: getRiskMessage(riskScore)
+      riskScore: riskError ? null : riskScore,
+      riskError,
+      message: riskError ? null : getRiskMessage(riskScore)
     };
   } catch (error) {
     console.error('Error in processSpeech:', error);
