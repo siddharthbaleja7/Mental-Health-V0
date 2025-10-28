@@ -11,6 +11,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const logger = require('./src/utils/logger');
 const crisisHandler = require('./src/middleware/crisis');
 const db = require('./src/config/database');
+const { listGeminiModels } = require('./src/services/transcriptionService');
 
 dotenv.config();
 const app = express();
@@ -34,3 +35,5 @@ db.connect()
     console.error('Database connection failed:', err);
     process.exit(1);
   });
+
+// listGeminiModels();
