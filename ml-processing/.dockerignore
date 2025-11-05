@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Development
+.git
+.gitignore
+tests/
+*.log
+.env*
+.DS_Store
+
+# Large ML Models
+depression_distilbert_model/
+models/*.safetensors
+models/*.bin
+models/*.pt
+*.onnx
+
+# Cache and temp files
+**/__pycache__/
+.pytest_cache/
