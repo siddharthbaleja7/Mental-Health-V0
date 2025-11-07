@@ -18,8 +18,15 @@ classifier = None
 def load_model():
     global classifier
     try:
-        logger.info(f"Loading model from {model_dir}")
-        classifier = BertDepressionClassifier(model_dir)
+        if os.path.exists(model_dir):
+            logger.info(f"Loading model from local directory: {model_dir}")
+            classifier = BertDepressionClassifier(model_dir)
+        else:
+            logger.info("Local model not found. Loading base model from Hugging Face Hub...")
+            # You can replace 'distilbert-base-uncased' with your own Hugging Face model ID if you upload it
+            # e.g., 'your-username/your-model-name'
+            classifier = BertDepressionClassifier('distilbert-base-uncased') 
+            
         logger.info("Model loaded successfully")
     except Exception as e:
         logger.error(f"Error loading model: {str(e)}")
