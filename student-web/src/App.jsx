@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTheme } from './hooks/useTheme';
-import AuthPage from './pages/AuthPage';
+import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import { logout } from './api';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -31,12 +32,18 @@ export default function App() {
   }
 
   return (
-    <>
-      {isAuth ? (
-        <DashboardPage onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />
-      ) : (
-        <AuthPage onLoginSuccess={handleLogin} />
-      )}
-    </>
+    <div className={theme === 'dark' ? 'dark' : ''}>
+      <Routes>
+        <Route
+          path="/"
+          element={!isAuth ? <LoginPage onLoginSuccess={handleLogin} /> : <Navigate to="/dashboard" />}
+        />
+        <Route
+          path="/dashboard"
+          element={isAuth ? <DashboardPage onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} /> : <Navigate to="/" />}
+        />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </div>
   );
 }

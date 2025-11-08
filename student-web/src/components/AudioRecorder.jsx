@@ -38,7 +38,7 @@ const AudioRecorder = () => {
     try {
       // Get user permission for microphone
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Create the recorder
       const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = recorder;
@@ -57,7 +57,7 @@ const AudioRecorder = () => {
 
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioFile = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
-        
+
         try {
           // Call the API
           const analysisResult = await analyzeSpeech(audioFile);
@@ -99,7 +99,7 @@ const AudioRecorder = () => {
       setIsRecording(false);
     }
   };
-  
+
   // Helper to color-code the risk score
   const getRiskColor = (score) => {
     // Add a check for null/undefined score
@@ -113,7 +113,7 @@ const AudioRecorder = () => {
 
   return (
     <div className="w-full max-w-md p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-      
+
       {/* --- 6. YOUR NEW UI MESSAGE --- */}
       <div className="mb-6 text-center">
         <p className="text-xl font-medium text-gray-900 dark:text-white">
@@ -124,11 +124,10 @@ const AudioRecorder = () => {
       {/* --- RECORDING BUTTON --- */}
       <button
         onClick={isRecording ? stopRecording : startRecording}
-        className={`w-full flex items-center justify-center p-6 rounded-full transition-all duration-300 ease-in-out ${
-          isRecording
-            ? 'bg-red-500 hover:bg-red-600'
-            : 'bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200'
-        } text-white dark:text-black`}
+        className={`w-full flex items-center justify-center p-6 rounded-full transition-all duration-300 ease-in-out ${isRecording
+          ? 'bg-red-500 hover:bg-red-600'
+          : 'bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200'
+          } text-white dark:text-black`}
         disabled={loading}
       >
         {isRecording ? (
@@ -137,7 +136,7 @@ const AudioRecorder = () => {
           <MicIcon className="w-10 h-10" />
         )}
       </button>
-      
+
       {/* --- STATUS TEXT --- */}
       <div className="mt-6 text-center">
         <p className="text-lg font-medium text-gray-900 dark:text-white">
@@ -166,23 +165,15 @@ const AudioRecorder = () => {
       {/* --- RESULTS CARD --- */}
       {result && (
         <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4">
-          <h3 className="font-semibold text-lg text-black dark:text-white">Analysis Result</h3>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Risk Score</p>
-            <p className={`text-3xl font-bold ${getRiskColor(result.riskScore)}`}>
-              {(result.riskScore * 100).toFixed(0)}%
+          <div className="text-center py-6">
+            <div className="text-4xl mb-4">🎉</div>
+            <h3 className="text-xl font-bold text-white mb-2">Great Job!</h3>
+            <p className="text-gray-300">
+              You've completed this week's check-in. You're doing great, champ!
+              See you next week!
             </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Transcript</p>
-            <p className="mt-1 text-gray-700 dark:text-gray-300 italic">
+            <p className="mt-4 text-sm text-gray-500 italic">
               "{result.transcript}"
-            </p>
-          </div>
-           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Guidance</p>
-            <p className="mt-1 text-gray-700 dark:text-gray-300">
-              {result.message}
             </p>
           </div>
         </div>
