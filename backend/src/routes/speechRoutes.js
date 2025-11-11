@@ -38,4 +38,22 @@ router.post(
   }
 );
 
+router.get(
+  '/history',
+  auth,
+  async (req, res) => {
+    try {
+      const User = require('../models/User');
+      const user = await User.findById(req.user.id).select('assessments');
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.json(user.assessments);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error fetching history' });
+    }
+  }
+);
+
 module.exports = router;

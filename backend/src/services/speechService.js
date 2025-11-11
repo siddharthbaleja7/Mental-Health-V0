@@ -7,44 +7,43 @@ const audioConverter = require('../utils/audioConverter');
 const { ensureDir } = require('../utils/ensureDir');
 
 async function processSpeech(filePath, userId) {
-  // Ensure the uploads directory exists
   const uploadsDir = path.join(__dirname, '../../uploads');
   await ensureDir(uploadsDir);
 
   try {
-    // Convert audio to WAV format if needed
     const wavFilePath = await audioConverter.convertToWav(filePath);
     
-    // Step 1: Transcribe audio to text using Gemini
     const transcript = await transcriptionService.transcribe(wavFilePath);
     console.log('Transcription completed:', transcript);
 
-    // Step 2: Analyze depression risk using Gemini
-    let riskScore;
+    let riskResult = null;
     let riskError = null;
     try {
-      riskScore = await riskAnalyzer.analyze(transcript);
-      console.log('Risk analysis completed. Score:', riskScore);
+      // *** UPDATED LINE ***
+      // riskAnalyzer now returns an object: { prediction, score }
+      riskResult = await riskAnalyzer.analyze(transcript);
+      console.log('Risk analysis completed. Result:', riskResult);
     } catch (error) {
       console.error('Risk analysis failed:', error.message);
       riskError = error.message;
     }
 
-    // Step 3: Save results to user profile
+    // *** UPDATED BLOCK ***
+    // Save all new fields to the database
     const assessment = {
       transcript,
-      riskScore: riskError ? null : riskScore,
+      riskScore: riskResult?.score || null,
+      prediction: riskResult?.prediction || null,
       riskError,
       date: new Date(),
     };
-
+    
     await User.findByIdAndUpdate(userId, {
       $push: { assessments: assessment }
     });
-
-    // Step 4: Clean up the uploaded files
+    
+    // ... (file cleanup logic) ...
     try {
-      // Delete both original and converted files if they exist
       if (filePath !== wavFilePath) {
         await fs.unlink(path.resolve(filePath));
         await fs.unlink(path.resolve(wavFilePath));
@@ -55,11 +54,14 @@ async function processSpeech(filePath, userId) {
       console.warn('Failed to delete uploaded file:', err);
     }
 
+    // *** UPDATED RETURN ***
+    // Return all new fields to the frontend
     return {
       transcript,
-      riskScore: riskError ? null : riskScore,
+      riskScore: riskResult?.score || null,
+      prediction: riskResult?.prediction || null,
       riskError,
-      message: riskError ? null : getRiskMessage(riskScore)
+      message: riskError ? null : getRiskMessage(riskResult?.score)
     };
   } catch (error) {
     console.error('Error in processSpeech:', error);
@@ -68,6 +70,7 @@ async function processSpeech(filePath, userId) {
 }
 
 function getRiskMessage(score) {
+  if (score === null) return null;
   if (score <= 0.3) {
     return "Low risk - Your responses suggest minimal signs of depression. However, continue monitoring your mental health and seek support if needed.";
   } else if (score <= 0.7) {
