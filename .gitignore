@@ -24,3 +24,6 @@ android/app/build/
 # Env files
 .env
 .bundle/.bundle/
+
+# ML Model (Too large for GitHub)
+ml-processing/depression_distilbert_model/
