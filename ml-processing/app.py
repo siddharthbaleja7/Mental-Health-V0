@@ -32,9 +32,10 @@ def load_model():
         else:
             logger.info("Local model not found (empty directory). Loading base model from Hugging Face Hub...")
 
-            # You can replace 'distilbert-base-uncased' with your own Hugging Face model ID if you upload it
-            # e.g., 'your-username/your-model-name'
-            classifier = BertDepressionClassifier('distilbert-base-uncased') 
+            # Attempt to use the user's custom fine-tuned model
+            # Note: This is larger (~130MB) and may risk OOM on Free Tier
+            logger.info("Downloading custom model from Hugging Face: Sid8421/depression-distilbert-fp16...")
+            classifier = BertDepressionClassifier('Sid8421/depression-distilbert-fp16') 
             
         logger.info("Model loaded successfully")
     except Exception as e:
