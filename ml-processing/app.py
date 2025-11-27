@@ -57,9 +57,15 @@ def analyze():
         logger.error(f"Error during analysis: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+# Load model immediately when this file is imported (by Gunicorn)
+try:
+    load_model()
+except Exception as e:
+    logger.warning(f"Initial model load failed (this is expected during build): {e}")
+
 if __name__ == '__main__':
     try:
-        load_model()
+        # load_model() is already called above
         app.run(host='0.0.0.0', port=8080)
     except Exception as e:
         logger.error(f"Failed to start application: {str(e)}")
