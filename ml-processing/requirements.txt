@@ -1,10 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 datasets==2.15.0
 scikit-learn
 pandas==2.2.3
 nltk==3.8.1
 tqdm==4.66.2
 transformers>=4.30.0
-torch>=2.0.0
+torch==2.1.2+cpu
 numpy>=1.24.0,<2.0.0
 huggingface-hub>=0.19.0
 flask

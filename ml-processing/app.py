@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import torch
+torch.set_num_threads(1)
 from models.bert_depression_classifier import BertDepressionClassifier
 import os
 import logging
