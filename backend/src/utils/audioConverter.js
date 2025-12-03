@@ -1,4 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('ffmpeg-static');
+ffmpeg.setFfmpegPath(ffmpegPath);
 const path = require('path');
 const fs = require('fs').promises;
 
