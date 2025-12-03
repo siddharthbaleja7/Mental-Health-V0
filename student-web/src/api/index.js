@@ -1,11 +1,13 @@
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
 const publicApiClient = axios.create({
-  baseURL: 'http://localhost:5001/api'
+  baseURL: API_URL
 });
 
 const securedApiClient = axios.create({
-  baseURL: 'http://localhost:5001/api'
+  baseURL: API_URL
 });
 
 securedApiClient.interceptors.request.use((config) => {

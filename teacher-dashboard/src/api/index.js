@@ -1,13 +1,16 @@
 import axios from 'axios';
 
 // Create a base client for public routes (login/register)
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
+// Create a base client for public routes (login/register)
 const publicApiClient = axios.create({
-  baseURL: 'http://localhost:5001/api'
+  baseURL: API_URL
 });
 
 // Create a client for secured routes that will use the token
 const securedApiClient = axios.create({
-  baseURL: 'http://localhost:5001/api'
+  baseURL: API_URL
 });
 
 // Interceptor to add the auth token to every secured request
