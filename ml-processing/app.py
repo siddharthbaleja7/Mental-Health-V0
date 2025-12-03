@@ -34,9 +34,10 @@ def load_model():
         else:
             logger.info("Local model not found (empty directory). Loading base model from Hugging Face Hub...")
 
-            # Using Side8421/depression-distilbert-fp16 to optimize memory usage
-            logger.info("Downloading optimized model from Hugging Face: Sid8421/depression-distilbert-fp16...")
-            classifier = BertDepressionClassifier('Sid8421/depression-distilbert-fp16') 
+            # Fallback to a much lighter model for Free Tier (TinyBERT)
+            # This is the user's custom distilled model
+            logger.info("Downloading custom TinyBERT from Hugging Face: Sid8421/tinybert-depression...")
+            classifier = BertDepressionClassifier('Sid8421/tinybert-depression') 
             
         logger.info("Model loaded successfully")
     except Exception as e:
