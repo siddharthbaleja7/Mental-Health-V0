@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 class BertDepressionClassifier:
     def __init__(self, model_dir):
         self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_dir, low_cpu_mem_usage=True, torch_dtype=torch.float16)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_dir, low_cpu_mem_usage=True)
 
     def predict(self, text):
         inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=128)
