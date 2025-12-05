@@ -47,7 +47,9 @@ const LoginPage = ({ onLoginSuccess }) => {
             const { token, role: userRole } = await login(username, password);
 
             if (userRole === 'teacher') {
-                window.location.href = `http://localhost:3001?token=${token}`;
+                // Redirect to the deployed Teacher Dashboard
+                const teacherUrl = process.env.REACT_APP_TEACHER_URL || 'http://localhost:3001';
+                window.location.href = `${teacherUrl}?token=${token}`;
             } else {
                 if (role === 'teacher') {
                     setError("This account is not a teacher account.");

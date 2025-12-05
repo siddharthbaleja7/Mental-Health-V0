@@ -46,7 +46,8 @@ const AuthPage = ({ onLoginSuccess }) => {
 
       if (userRole === 'student') {
         // Redirect to Student Web if the user is a student
-        window.location.href = `http://localhost:3000?token=${token}`;
+        const studentUrl = process.env.REACT_APP_STUDENT_URL || 'http://localhost:3000';
+        window.location.href = `${studentUrl}?token=${token}`;
       } else {
         // If teacher, allow login
         onLoginSuccess();
