@@ -81,7 +81,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                         </div>
                         <div className="mt-12">
                             <p className="text-2xl font-light text-white leading-relaxed">
-                                "Your mental well-being is a journey, not a destination. We're here to walk it with you."
+                                Your mental well-being is a journey, not a destination. We're here to walk it with you.
                             </p>
                         </div>
                     </div>
@@ -160,7 +160,12 @@ const LoginPage = ({ onLoginSuccess }) => {
                     <div className="mt-6 text-center">
                         <p className="text-xs text-gray-500 mb-2">Test Credentials</p>
                         <div className="inline-block px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-400">
-                            <p>User: <span className="text-cyan-400 font-mono">student</span> &bull; Pass: <span className="text-cyan-400 font-mono">password</span></p>
+                        {role === 'student' ? (
+                <p>User: <span className="text-cyan-400 font-mono">student</span> &bull; Pass: <span className="text-cyan-400 font-mono">password</span></p>
+              ) : (
+                <p>User: <span className="text-purple-400 font-mono">teacher</span> &bull; Pass: <span className="text-purple-400 font-mono">password</span></p>
+              )}
+                            {/* <p>User: <span className="text-cyan-400 font-mono">student</span> &bull; Pass: <span className="text-cyan-400 font-mono">password</span></p> */}
                         </div>
                         <p className="text-[10px] text-gray-600 mt-4 font-mono">v0-beta-build.2024</p>
                     </div>
