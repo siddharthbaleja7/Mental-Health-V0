@@ -25,6 +25,10 @@ app.use('/api/speech', speechRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
+});
+
 app.use(crisisHandler);
 
 const PORT = process.env.PORT || 5000;

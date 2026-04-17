@@ -46,7 +46,7 @@ def load_model():
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    return jsonify({"status": "healthy", "model_loaded": classifier is not None})
+    return jsonify({"status": "healthy"})
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
