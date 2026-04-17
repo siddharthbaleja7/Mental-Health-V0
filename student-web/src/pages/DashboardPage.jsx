@@ -23,12 +23,7 @@ const DashboardPage = ({ onLogout, theme, toggleTheme }) => {
     fetchHistory();
   }, []);
 
-  const getRiskColor = (score) => {
-    if (score === null || typeof score === 'undefined') return 'text-gray-400';
-    if (score <= 0.3) return 'text-green-400';
-    if (score <= 0.7) return 'text-yellow-400';
-    return 'text-red-400';
-  };
+
 
   return (
     <div className="min-h-screen pb-10">

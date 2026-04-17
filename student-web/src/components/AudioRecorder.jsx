@@ -100,16 +100,7 @@ const AudioRecorder = () => {
     }
   };
 
-  // Helper to color-code the risk score
-  const getRiskColor = (score) => {
-    // Add a check for null/undefined score
-    if (score === null || typeof score === 'undefined') {
-      return 'text-gray-500';
-    }
-    if (score <= 0.3) return 'text-green-600 dark:text-green-400';
-    if (score <= 0.7) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
-  };
+
 
   return (
     <div className="w-full max-w-md p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
